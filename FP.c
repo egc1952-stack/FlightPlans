@@ -56,6 +56,7 @@ double greatCircleDistance(double lat1, double lon1, double lat2, double lon2) {
 
 int isValidPermutation(Permutation* perm, Constraint* constraints, int numConstraints) {
     int position[MAX_AIRPORTS];
+    memset(position, -1, sizeof(position));
     for (int i = 0; i < perm->count; i++) {
         position[perm->airports[i]] = i;
     }
