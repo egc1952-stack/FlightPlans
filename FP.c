@@ -29,7 +29,7 @@
 #define MAX_RESULTS 1000
 
 typedef struct {
-    char code[4];
+    char code[5];
     double lat, lon;
     int index;
 } Airport;
@@ -54,16 +54,38 @@ double greatCircleDistance(double lat1, double lon1, double lat2, double lon2) {
     return R * c;
 }
 
-int isValidPermutation(Permutation* perm, Constraint* constraints, int numConstraints) {
+// Check if forcedStart is an END in any constraint
+int isForcedStartAnEnd(int forcedStart, Constraint* constraints, int numConstraints) {
+    for (int i = 0; i < numConstraints; i++) {
+        if (constraints[i].end == forcedStart) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int isValidPermutation(Permutation* perm, Constraint* constraints, int numConstraints, int forcedStart) {
+    // When there's a forced start, constraints only apply to positions 1+
+    // The forced start at position 0 is outside the constraint system
+    int startPos = (forcedStart != -1) ? 1 : 0;
+    
     int position[MAX_AIRPORTS];
     memset(position, -1, sizeof(position));
-    for (int i = 0; i < perm->count; i++) {
+    
+    // Build position map for airports from startPos onwards
+    for (int i = startPos; i < perm->count; i++) {
         position[perm->airports[i]] = i;
     }
     
     for (int i = 0; i < numConstraints; i++) {
-        if (position[constraints[i].beg] > position[constraints[i].end]) {
-            return 0;
+        int begPos = position[constraints[i].beg];
+        int endPos = position[constraints[i].end];
+        
+        // Both must be found in the journey portion (startPos onwards)
+        if (begPos != -1 && endPos != -1) {
+            if (begPos > endPos) {
+                return 0;
+            }
         }
     }
     return 1;
@@ -72,11 +94,16 @@ int isValidPermutation(Permutation* perm, Constraint* constraints, int numConstr
 void generatePermutations(Airport* airports, int numAirports, 
                          Constraint* constraints, int numConstraints,
                          Permutation* current, int used[],
-                         Permutation** results, int* resultCount) {
-    if (current->count == numAirports) {
-        if (isValidPermutation(current, constraints, numConstraints)) {
+                         Permutation** results, int* resultCount, int forcedStart, int forcedStartNeedsVisit) {
+    // If forcedStart is an END in a constraint, it needs to appear twice:
+    // once at position 0 (forced), and again later in the journey.
+    // Otherwise, it only appears once as the forced start.
+    int targetCount = (forcedStart != -1 && forcedStartNeedsVisit) ? (numAirports + 1) : numAirports;
+    
+    if (current->count == targetCount) {
+        if (isValidPermutation(current, constraints, numConstraints, forcedStart)) {
             double total = 0.0;
-            for (int k = 0; k < numAirports - 1; k++) {
+            for (int k = 0; k < current->count - 1; k++) {
                 int idx1 = current->airports[k];
                 int idx2 = current->airports[k + 1];
                 total += greatCircleDistance(airports[idx1].lat, airports[idx1].lon,
@@ -95,7 +122,7 @@ void generatePermutations(Airport* airports, int numAirports,
             used[i] = 1;
             current->airports[current->count++] = i;
             generatePermutations(airports, numAirports, constraints, numConstraints,
-                               current, used, results, resultCount);
+                               current, used, results, resultCount, forcedStart, forcedStartNeedsVisit);
             current->count--;
             used[i] = 0;
         }
@@ -123,7 +150,7 @@ int main() {
     
     Constraint constraints[MAX_CONSTRAINTS];
     for (int i = 0; i < numConstraints; i++) {
-        char beg[4], end[4];
+        char beg[5], end[5];
         fscanf(fin, "%s %s", beg, end);
         for (int j = 0; j < numAirports; j++) {
             if (strcmp(airports[j].code, beg) == 0) constraints[i].beg = j;
@@ -132,7 +159,7 @@ int main() {
     }
     
     int startIdx = -1;
-    char start[4];
+    char start[5];
     if (fscanf(fin, "%s", start) == 1) {
         for (int j = 0; j < numAirports; j++) {
             if (strcmp(airports[j].code, start) == 0) startIdx = j;
@@ -143,20 +170,24 @@ int main() {
     
     Permutation* results[MAX_RESULTS];
     int resultCount = 0;
-    Permutation current;
+    Permutation current = {0};
     int used[MAX_AIRPORTS] = {0};
     
-    if (startIdx != -1) {
+       if (startIdx != -1) {
+        int needsVisitAgain = isForcedStartAnEnd(startIdx, constraints, numConstraints);
         current.airports[0] = startIdx;
         current.count = 1;
-        used[startIdx] = 1;
+        // Only mark as used if it won't be visited again
+        if (!needsVisitAgain) {
+            used[startIdx] = 1;
+        }
         generatePermutations(airports, numAirports, constraints, numConstraints,
-                           &current, used, results, &resultCount);
+                           &current, used, results, &resultCount, startIdx, needsVisitAgain);
     } else {
         current.count = 0;
         memset(used, 0, sizeof(used));
         generatePermutations(airports, numAirports, constraints, numConstraints,
-                           &current, used, results, &resultCount);
+                           &current, used, results, &resultCount, -1, 0);
     }
     
     FILE *fout = fopen("output.txt", "w");
