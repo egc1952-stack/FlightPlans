@@ -1,0 +1,104 @@
+PYTHON-EXCEL SOLUTION SETUP GUIDE
+==================================
+
+STEP 1: Install Python Package
+-------------------------------
+Open PowerShell and run:
+  pip install openpyxl
+
+This library reads/writes Excel files without needing Excel installed.
+
+
+STEP 2: Create Your Excel File
+-------------------------------
+Create a new Excel file called "FlightPlans.xlsx" with the following structure:
+
+SHEET 1: "Airports"
+┌─────────┬──────────┬─────────────┐
+│ Code    │ Latitude │ Longitude   │
+├─────────┼──────────┼─────────────┤
+│ lfed    │ 48.0569  │ -2.9233     │
+│ fzwa    │ -6.1212  │ 23.5690     │
+│ lflp    │ 45.9309  │ 6.1064      │
+│ rjoc    │ 35.4136  │ 132.8900    │
+└─────────┴──────────┴─────────────┘
+
+SHEET 2: "Constraints"
+┌─────────┬─────────┐
+│ Begin   │ End     │
+├─────────┼─────────┤
+│ rjoc    │ lflp    │
+│ rjoc    │ fzwa    │
+└─────────┴─────────┘
+
+SHEET 3: "Settings"
+┌──────────────┐
+│ lfed         │  (This is the Start Airport)
+└──────────────┘
+
+
+STEP 3: Create Named Ranges in Excel
+-------------------------------------
+In Excel, create these named ranges (File > Options > Define Name):
+
+1. Named Range: "Airports"
+   - Scope: Workbook
+   - Refers to: Airports!$A$1:$C$4  (adjust row count as needed)
+
+2. Named Range: "Constraints"
+   - Scope: Workbook
+   - Refers to: Constraints!$A$1:$B$2  (adjust row count as needed)
+
+3. Named Range: "StartAirport"
+   - Scope: Workbook
+   - Refers to: Settings!$A$1
+
+
+STEP 4: Run the Python Script
+------------------------------
+In PowerShell, run:
+  python excel_to_input.py
+
+Output:
+  ✓ Successfully created input.txt from Excel
+    - 4 airports
+    - 2 constraints
+    - Start airport: lfed
+
+
+STEP 5: Run Your C Program
+----------------------------
+  FP.exe
+
+Output will be written to output.txt as usual.
+
+
+WORKFLOW SUMMARY
+----------------
+1. Update data in Excel (FlightPlans.xlsx)
+2. Run Python script (excel_to_input.py)
+3. Run C program (FP.exe)
+4. Check results (output.txt)
+
+That's it! No need to manually edit input.txt anymore.
+
+
+BENEFITS OF THIS APPROACH
+--------------------------
+✓ Data stays in Excel (easy to view/edit)
+✓ No changes to your C program
+✓ Automated data conversion
+✓ Error checking built into Python script
+✓ Can be scheduled/automated further
+
+
+TROUBLESHOOTING
+---------------
+- If Python script doesn't find named ranges:
+  * Make sure exact names match: "Airports", "Constraints", "StartAirport"
+  * Check that ranges include header rows
+  * Verify Excel file is saved in Excel format (.xlsx)
+
+- If C program still uses old input.txt:
+  * Re-run Python script to regenerate input.txt
+  * Python script will overwrite the old file

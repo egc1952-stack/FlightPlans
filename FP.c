@@ -46,7 +46,7 @@ typedef struct {
 } Permutation;
 
 double greatCircleDistance(double lat1, double lon1, double lat2, double lon2) {
-    const double R = 6371.0; // Earth radius in km
+    const double R = 3440.0; // Earth radius in nm
     double dlat = (lat2 - lat1) * M_PI / 180.0;
     double dlon = (lon2 - lon1) * M_PI / 180.0;
     double a = sin(dlat/2)*sin(dlat/2) + cos(lat1*M_PI/180.0)*cos(lat2*M_PI/180.0)*sin(dlon/2)*sin(dlon/2);
