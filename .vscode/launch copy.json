@@ -6,7 +6,8 @@
       "type": "node",
       "request": "launch",
       "program": "${workspaceFolder}/index.js",
-      "runtimeExecutable": "C:\\Program Files\\nodejs\\node.exe"
+      "runtimeExecutable": "C:\\Program Files\\nodejs\\node.exe",
+      "justMyCode": true
     }
   ]
 }

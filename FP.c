@@ -54,20 +54,8 @@ double greatCircleDistance(double lat1, double lon1, double lat2, double lon2) {
     return R * c;
  }
 
-// Check if forcedStart is an END in any constraint
-int isForcedStartAnEnd(int forcedStart, Constraint* constraints, int numConstraints) {
-    for (int i = 0; i < numConstraints; i++) {
-        if (constraints[i].end == forcedStart) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-int isValidPermutation(Permutation* perm, Constraint* constraints, int numConstraints, int forcedStart) {
-    // When there's a forced start, constraints only apply to positions 1+
-    // The forced start at position 0 is outside the constraint system
-    int startPos = (forcedStart != -1) ? 1 : 0;
+int isValidPermutation(Permutation* perm, Constraint* constraints, int numConstraints, int forcedStart, int skipForcedStartConstraints) {
+    int startPos = (skipForcedStartConstraints && forcedStart != -1 && perm->count > 0 && perm->airports[0] == forcedStart) ? 1 : 0;
     
     int position[MAX_AIRPORTS];
     memset(position, -1, sizeof(position));
@@ -94,14 +82,11 @@ int isValidPermutation(Permutation* perm, Constraint* constraints, int numConstr
 void generatePermutations(Airport* airports, int numAirports, 
                          Constraint* constraints, int numConstraints,
                          Permutation* current, int used[],
-                         Permutation** results, int* resultCount, int forcedStart, int forcedStartNeedsVisit) {
-    // If forcedStart is an END in a constraint, it needs to appear twice:
-    // once at position 0 (forced), and again later in the journey.
-    // Otherwise, it only appears once as the forced start.
-    int targetCount = (forcedStart != -1 && forcedStartNeedsVisit) ? (numAirports + 1) : numAirports;
+                         Permutation** results, int* resultCount, int forcedStart, int skipForcedStartConstraints) {
+    int targetCount = numAirports;
     
     if (current->count == targetCount) {
-        if (isValidPermutation(current, constraints, numConstraints, forcedStart)) {
+        if (isValidPermutation(current, constraints, numConstraints, forcedStart, skipForcedStartConstraints)) {
             double total = 0.0;
             for (int k = 0; k < current->count - 1; k++) {
                 int idx1 = current->airports[k];
@@ -122,7 +107,7 @@ void generatePermutations(Airport* airports, int numAirports,
             used[i] = 1;
             current->airports[current->count++] = i;
             generatePermutations(airports, numAirports, constraints, numConstraints,
-                               current, used, results, resultCount, forcedStart, forcedStartNeedsVisit);
+                               current, used, results, resultCount, forcedStart, skipForcedStartConstraints);
             current->count--;
             used[i] = 0;
         }
@@ -173,21 +158,21 @@ int main() {
     Permutation current = {0};
     int used[MAX_AIRPORTS] = {0};
     
-       if (startIdx != -1) {
-        int needsVisitAgain = isForcedStartAnEnd(startIdx, constraints, numConstraints);
-        current.airports[0] = startIdx;
-        current.count = 1;
-        // Only mark as used if it won't be visited again
-        if (!needsVisitAgain) {
-            used[startIdx] = 1;
-        }
-        generatePermutations(airports, numAirports, constraints, numConstraints,
-                           &current, used, results, &resultCount, startIdx, needsVisitAgain);
-    } else {
+    // Generate all valid permutations without forced start restrictions
+    current.count = 0;
+    memset(used, 0, sizeof(used));
+    generatePermutations(airports, numAirports, constraints, numConstraints,
+                       &current, used, results, &resultCount, -1, 0);
+    
+    // If forced start specified, also generate permutations starting with it
+    if (startIdx != -1) {
         current.count = 0;
         memset(used, 0, sizeof(used));
+        current.airports[0] = startIdx;
+        current.count = 1;
+        used[startIdx] = 1;
         generatePermutations(airports, numAirports, constraints, numConstraints,
-                           &current, used, results, &resultCount, -1, 0);
+                           &current, used, results, &resultCount, startIdx, 1);
     }
     
     FILE *fout = fopen("output.txt", "w");
