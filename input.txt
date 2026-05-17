@@ -1,9 +1,9 @@
- 2 		
+ 3 		
+ lgsm 	37.6892	26.9122
  fzwa 	-6.1212	23.5690
- lfed 	48.0569	-2.9233
+ kahn 	33.9487	-83.3260
 		
  1 		
- lfed 	fzwa	
+ fzwa 	kahn	
 		
- fzwa 		
-
+ lgsm 		

@@ -130,11 +130,12 @@ void generatePermutations(Airport* airports, int numAirports,
 }
 
 int main() {
-    FILE *fin = fopen("D:/FlightPlans/FlightPlans/input.txt", "r");
+    FILE *fin = fopen("D:/C Projects/FlightPlans/FlightPlans/input.txt", "r");
     if (!fin) {
-        printf("Error opening input.txt\n");
-        return 1;
-    }
+    perror("fopen failed");
+    return 1;
+}
+
     
     int numAirports;
     fscanf(fin, "%d", &numAirports);
