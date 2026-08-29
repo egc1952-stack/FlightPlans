@@ -1,26 +1,28 @@
- 9 		
- mmep 	21.4194	-104.8426
- kanj 	46.4792	-84.3684
- kdkk 	42.4940	-79.2711
- kolu 	41.4487	-97.3410
- kuin 	39.9430	-91.1945
- lflp 	45.9309	6.1064
- lqbk 	44.9414	17.2975
- lrop 	44.5711	26.0850
- rjoc 	0.0000	0.0000
+ 3 		
+ kbdl 	41.9390	-72.6843
+ cypd 	45.6565	-61.3685
+ gmtt 	35.7317	-5.9211
+  		
+  		
+  		
+  		
+  		
 		
 		
 		
 		
 		
- 6 		
- kolu 	kanj	
- lflp 	kuin	
- lflp 	lqbk	
- lflp 	rjoc	
- kuin 	kdkk	
- kolu 	lrop	
 		
 		
 		
- mmep 		
+ 2 		
+ cypd 	 gmtt 	
+ gmtt 	 cypd 	
+  	  	
+  	  	
+  	  	
+		
+		
+		
+		
+ kbdl 		
