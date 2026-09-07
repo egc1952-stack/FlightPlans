@@ -1,12 +1,12 @@
- 3 		
- kbdl 	41.9390	-72.6843
+ 6 		
+ cypd 	45.6565	-61.3685
  cypd 	45.6565	-61.3685
  gmtt 	35.7317	-5.9211
+ lqbk 	44.9414	17.2975
+ mmep 	21.4194	-104.8426
+ vtpb 	16.6760	101.1951
   		
   		
-  		
-  		
-  		
 		
 		
 		
@@ -15,14 +15,14 @@
 		
 		
 		
- 2 		
- cypd 	 gmtt 	
- gmtt 	 cypd 	
+ 3 		
+ cypd 	 vtpb 	
+ cypd 	 mmep 	
+ lqbk 	 gmtt 	
   	  	
   	  	
-  	  	
 		
 		
 		
 		
- kbdl 		
+ cypd 		

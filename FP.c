@@ -97,8 +97,10 @@ int isValidRoute(int route[], int len, Constraint *constraints, int numConstrain
 }
 
 void evaluateRoute(Airport *airports, Constraint *constraints, int numConstraints,
-                   int route[], int len, Permutation *best, int *hasBest, int forcedStart) {
+                   int route[], int len, Permutation *best, int *hasBest,
+                   int forcedStart, long long *validRouteCount) {
     if (!isValidRoute(route, len, constraints, numConstraints, forcedStart)) return;
+    (*validRouteCount)++;
 
     double total = 0.0;
     for (int i = 0; i < len - 1; i++) {
@@ -130,15 +132,17 @@ void searchRoutes(Airport *airports, int numAirports,
                  Constraint *constraints, int numConstraints,
                  int route[], int used[], int routeCount,
                  Permutation *best, int *hasBest, int forcedStart,
-                 int cycleAirports[], int cycleCount) {
+                 int cycleAirports[], int cycleCount, long long *validRouteCount) {
     if (routeCount == numAirports) {
-        evaluateRoute(airports, constraints, numConstraints, route, routeCount, best, hasBest, forcedStart);
+        evaluateRoute(airports, constraints, numConstraints, route, routeCount,
+                      best, hasBest, forcedStart, validRouteCount);
 
         for (int i = 0; i < cycleCount; i++) {
             int repeatedRoute[MAX_AIRPORTS + 1];
             for (int j = 0; j < routeCount; j++) repeatedRoute[j] = route[j];
             repeatedRoute[routeCount] = cycleAirports[i];
-            evaluateRoute(airports, constraints, numConstraints, repeatedRoute, routeCount + 1, best, hasBest, forcedStart);
+            evaluateRoute(airports, constraints, numConstraints, repeatedRoute,
+                          routeCount + 1, best, hasBest, forcedStart, validRouteCount);
         }
         return;
     }
@@ -150,7 +154,8 @@ void searchRoutes(Airport *airports, int numAirports,
         route[routeCount] = i;
         used[i] = 1;
         searchRoutes(airports, numAirports, constraints, numConstraints,
-                     route, used, routeCount + 1, best, hasBest, forcedStart, cycleAirports, cycleCount);
+                     route, used, routeCount + 1, best, hasBest, forcedStart,
+                     cycleAirports, cycleCount, validRouteCount);
         used[i] = 0;
     }
 }
@@ -212,21 +217,24 @@ int main() {
     int used[MAX_AIRPORTS] = {0};
     Permutation best = {0};
     int hasBest = 0;
+    long long validRouteCount = 0;
     best.distance = -1.0;
 
     if (startIdx != -1) {
         route[0] = startIdx;
         used[startIdx] = 1;
         searchRoutes(airports, numAirports, constraints, numConstraints,
-                     route, used, 1, &best, &hasBest, startIdx, cycleAirports, cycleCount);
+                     route, used, 1, &best, &hasBest, startIdx,
+                     cycleAirports, cycleCount, &validRouteCount);
     } else {
         searchRoutes(airports, numAirports, constraints, numConstraints,
-                     route, used, 0, &best, &hasBest, -1, cycleAirports, cycleCount);
+                     route, used, 0, &best, &hasBest, -1,
+                     cycleAirports, cycleCount, &validRouteCount);
     }
 
     FILE *fout = fopen("D:/C Projects/FlightPlans/FlightPlans/output.txt", "w");
     if (hasBest) {
-        fprintf(fout, "1\n");
+        fprintf(fout, "%lld\n", validRouteCount);
         for (int i = 0; i < best.count; i++) {
             fprintf(fout, "%s ", airports[best.airports[i]].code);
         }
