@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <windows.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -20,8 +21,8 @@ typedef struct {
 } Airport;
 
 typedef struct {
-    int beg;
-    int end;
+    char beg[5];
+    char end[5];
 } Constraint;
 
 typedef struct {
@@ -48,46 +49,21 @@ int findAirportIndex(Airport *airports, int numAirports, const char *code) {
     return -1;
 }
 
-int repeatAirportForCycle(Constraint *constraints, int numConstraints, int numAirports) {
-    for (int airport = 0; airport < numAirports; airport++) {
-        int hasBeg = 0;
-        int hasEnd = 0;
-        for (int i = 0; i < numConstraints; i++) {
-            if (constraints[i].beg == airport) hasBeg = 1;
-            if (constraints[i].end == airport) hasEnd = 1;
-        }
-        if (hasBeg && hasEnd) return airport;
-    }
-    return -1;
-}
-
-int firstIndexOf(int route[], int len, int value) {
-    for (int i = 0; i < len; i++) {
-        if (route[i] == value) return i;
-    }
-    return -1;
-}
-
-int lastIndexOf(int route[], int len, int value) {
-    for (int i = len - 1; i >= 0; i--) {
-        if (route[i] == value) return i;
-    }
-    return -1;
-}
-
-int isValidRoute(int route[], int len, Constraint *constraints, int numConstraints, int forcedStart) {
+int isValidRoute(Airport *airports, int route[], int len,
+                 Constraint *constraints, int numConstraints, int forcedStart) {
     if (forcedStart != -1 && len > 0 && route[0] != forcedStart) return 0;
 
     for (int i = 0; i < numConstraints; i++) {
-        int beg = constraints[i].beg;
-        int end = constraints[i].end;
-
         int firstBeg = -1;
         int lastEnd = -1;
 
         for (int j = 0; j < len; j++) {
-            if (route[j] == beg && firstBeg == -1) firstBeg = j;
-            if (route[j] == end) lastEnd = j;
+            if (strcmp(airports[route[j]].code, constraints[i].beg) == 0 && firstBeg == -1) {
+                firstBeg = j;
+            }
+            if (strcmp(airports[route[j]].code, constraints[i].end) == 0) {
+                lastEnd = j;
+            }
         }
 
         if (firstBeg != -1 && lastEnd != -1 && firstBeg > lastEnd) return 0;
@@ -99,7 +75,7 @@ int isValidRoute(int route[], int len, Constraint *constraints, int numConstrain
 void evaluateRoute(Airport *airports, Constraint *constraints, int numConstraints,
                    int route[], int len, Permutation *best, int *hasBest,
                    int forcedStart, long long *validRouteCount) {
-    if (!isValidRoute(route, len, constraints, numConstraints, forcedStart)) return;
+    if (!isValidRoute(airports, route, len, constraints, numConstraints, forcedStart)) return;
     (*validRouteCount)++;
 
     double total = 0.0;
@@ -118,32 +94,15 @@ void evaluateRoute(Airport *airports, Constraint *constraints, int numConstraint
     }
 }
 
-int hasCycleAirport(Constraint *constraints, int numConstraints, int airport) {
-    int hasBeg = 0;
-    int hasEnd = 0;
-    for (int i = 0; i < numConstraints; i++) {
-        if (constraints[i].beg == airport) hasBeg = 1;
-        if (constraints[i].end == airport) hasEnd = 1;
-    }
-    return hasBeg && hasEnd;
-}
-
 void searchRoutes(Airport *airports, int numAirports,
                  Constraint *constraints, int numConstraints,
                  int route[], int used[], int routeCount,
                  Permutation *best, int *hasBest, int forcedStart,
-                 int cycleAirports[], int cycleCount, long long *validRouteCount) {
+                 long long *validRouteCount) {
     if (routeCount == numAirports) {
         evaluateRoute(airports, constraints, numConstraints, route, routeCount,
                       best, hasBest, forcedStart, validRouteCount);
 
-        for (int i = 0; i < cycleCount; i++) {
-            int repeatedRoute[MAX_AIRPORTS + 1];
-            for (int j = 0; j < routeCount; j++) repeatedRoute[j] = route[j];
-            repeatedRoute[routeCount] = cycleAirports[i];
-            evaluateRoute(airports, constraints, numConstraints, repeatedRoute,
-                          routeCount + 1, best, hasBest, forcedStart, validRouteCount);
-        }
         return;
     }
 
@@ -155,7 +114,7 @@ void searchRoutes(Airport *airports, int numAirports,
         used[i] = 1;
         searchRoutes(airports, numAirports, constraints, numConstraints,
                      route, used, routeCount + 1, best, hasBest, forcedStart,
-                     cycleAirports, cycleCount, validRouteCount);
+                     validRouteCount);
         used[i] = 0;
     }
 }
@@ -168,21 +127,26 @@ int main() {
     }
 
     int numAirports;
-    if (fscanf(fin, "%d", &numAirports) != 1) {
+    if (fscanf(fin, "%d", &numAirports) != 1 ||
+        numAirports < 1 || numAirports > MAX_AIRPORTS) {
+        fprintf(stderr, "Invalid airport count.\n");
         fclose(fin);
         return 1;
     }
 
     Airport airports[MAX_AIRPORTS];
     for (int i = 0; i < numAirports; i++) {
-        if (fscanf(fin, "%s %lf %lf", airports[i].code, &airports[i].lat, &airports[i].lon) != 3) {
+        if (fscanf(fin, "%4s %lf %lf", airports[i].code, &airports[i].lat, &airports[i].lon) != 3) {
+            fprintf(stderr, "Invalid airport row.\n");
             fclose(fin);
             return 1;
         }
     }
 
     int numConstraints;
-    if (fscanf(fin, "%d", &numConstraints) != 1) {
+    if (fscanf(fin, "%d", &numConstraints) != 1 ||
+        numConstraints < 0 || numConstraints > MAX_CONSTRAINTS) {
+        fprintf(stderr, "Invalid constraint count.\n");
         fclose(fin);
         return 1;
     }
@@ -190,28 +154,28 @@ int main() {
     Constraint constraints[MAX_CONSTRAINTS];
     for (int i = 0; i < numConstraints; i++) {
         char beg[5], end[5];
-        if (fscanf(fin, "%s %s", beg, end) != 2) {
+        if (fscanf(fin, "%4s %4s", beg, end) != 2 ||
+            findAirportIndex(airports, numAirports, beg) == -1 ||
+            findAirportIndex(airports, numAirports, end) == -1) {
+            fprintf(stderr, "Invalid constraint row.\n");
             fclose(fin);
             return 1;
         }
-        constraints[i].beg = findAirportIndex(airports, numAirports, beg);
-        constraints[i].end = findAirportIndex(airports, numAirports, end);
+        strcpy(constraints[i].beg, beg);
+        strcpy(constraints[i].end, end);
     }
 
     int startIdx = -1;
     char start[5];
-    if (fscanf(fin, "%s", start) == 1) {
+    if (fscanf(fin, "%4s", start) == 1) {
         startIdx = findAirportIndex(airports, numAirports, start);
-    }
-    fclose(fin);
-
-    int cycleAirports[MAX_AIRPORTS];
-    int cycleCount = 0;
-    for (int airport = 0; airport < numAirports; airport++) {
-        if (hasCycleAirport(constraints, numConstraints, airport)) {
-            cycleAirports[cycleCount++] = airport;
+        if (startIdx == -1) {
+            fprintf(stderr, "Unknown start airport.\n");
+            fclose(fin);
+            return 1;
         }
     }
+    fclose(fin);
 
     int route[MAX_AIRPORTS];
     int used[MAX_AIRPORTS] = {0};
@@ -220,27 +184,42 @@ int main() {
     long long validRouteCount = 0;
     best.distance = -1.0;
 
+    LARGE_INTEGER performanceFrequency;
+    LARGE_INTEGER computationStart;
+    LARGE_INTEGER computationEnd;
+    QueryPerformanceFrequency(&performanceFrequency);
+    QueryPerformanceCounter(&computationStart);
     if (startIdx != -1) {
         route[0] = startIdx;
         used[startIdx] = 1;
         searchRoutes(airports, numAirports, constraints, numConstraints,
                      route, used, 1, &best, &hasBest, startIdx,
-                     cycleAirports, cycleCount, &validRouteCount);
+                     &validRouteCount);
     } else {
         searchRoutes(airports, numAirports, constraints, numConstraints,
                      route, used, 0, &best, &hasBest, -1,
-                     cycleAirports, cycleCount, &validRouteCount);
+                     &validRouteCount);
     }
+    QueryPerformanceCounter(&computationEnd);
+    double computationTimeUs =
+        (double)(computationEnd.QuadPart - computationStart.QuadPart) * 1000000.0 /
+        (double)performanceFrequency.QuadPart;
 
     FILE *fout = fopen("D:/C Projects/FlightPlans/FlightPlans/output.txt", "w");
+    if (!fout) {
+        perror("fopen output failed");
+        return 1;
+    }
     if (hasBest) {
-        fprintf(fout, "%lld\n", validRouteCount);
+        fprintf(fout, "Valid route count: %lld\n", validRouteCount);
+        fprintf(fout, "Computation time \xCE\xBCs: %.0f\n", computationTimeUs);
         for (int i = 0; i < best.count; i++) {
             fprintf(fout, "%s ", airports[best.airports[i]].code);
         }
         fprintf(fout, "%.2f\n", best.distance);
     } else {
-        fprintf(fout, "0\n");
+        fprintf(fout, "Valid route count: 0\n");
+        fprintf(fout, "Computation time \xCE\xBCs: %.0f\n", computationTimeUs);
     }
     fclose(fout);
 
