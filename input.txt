@@ -1,12 +1,14 @@
- 6 		
+ 10 		
+ vtpb 	16.6760	101.1951
+ fzwa 	-6.1212	23.5690
+ gmtt 	35.7317	-5.9211
+ kuin 	39.9430	-91.1945
+ lfed 	48.0569	-2.9233
+ lflp 	45.9309	6.1064
  mmep 	21.4194	-104.8426
- kahn 	33.9487	-83.3260
- kbdl 	41.9390	-72.6843
- mmep 	21.4194	-104.8426
+ ojaq 	29.6116	35.0181
  vtpb 	16.6760	101.1951
  yqlp 	-26.6086	144.2572
-  		
-  		
 		
 		
 		
@@ -15,16 +17,14 @@
 		
 		
 		
-		
-		
- 3 		
- kbdl 	 vtpb 	
- kahn 	 yqlp 	
- kbdl 	 mmep 	
-  	  	
-  	  	
-  	  	
+ 7 		
+ vtpb 	 lfed 	
+ kuin 	 fzwa 	
+ vtpb 	 yqlp 	
+ lflp 	 vtpb 	
+ mmep 	 gmtt 	
+ lflp 	 ojaq 	
+ mmep 	 ojaq 	
   	  	
 		
-		
- mmep 		
+ vtpb 		
